@@ -9,15 +9,17 @@ import (
 
 func main() {
 	var (
-		config    clientv3.Config
-		client    *clientv3.Client
-		err       error
-		lease     clientv3.Lease
-		leaseResp *clientv3.LeaseGrantResponse
-		leaseId   clientv3.LeaseID
-		kv        clientv3.KV
-		putResp   *clientv3.PutResponse
-		getResp   *clientv3.GetResponse
+		config       clientv3.Config
+		client       *clientv3.Client
+		err          error
+		lease        clientv3.Lease
+		leaseResp    *clientv3.LeaseGrantResponse
+		leaseId      clientv3.LeaseID
+		kv           clientv3.KV
+		putResp      *clientv3.PutResponse
+		getResp      *clientv3.GetResponse
+		leaseResChan <-chan *clientv3.LeaseKeepAliveResponse
+		keepResp     *clientv3.LeaseKeepAliveResponse
 	)
 	config = clientv3.Config{
 		Endpoints:   []string{"47.99.240.52:2379"},
@@ -49,6 +51,27 @@ func main() {
 		return
 	}
 	fmt.Println("写入成功：", putResp.Header.Revision)
+
+	//进行续租
+	if leaseResChan, err = lease.KeepAlive(context.TODO(), leaseId); err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	go func() {
+		for {
+			select {
+			case keepResp = <-leaseResChan:
+				if keepResp == nil {
+					fmt.Println("租约已经失效了")
+					goto END
+				} else {
+					fmt.Println("收到自动续租应答：", keepResp.ID)
+				}
+			}
+		}
+	END:
+	}()
 
 	for {
 		if getResp, err = kv.Get(context.TODO(), "/cron/lock/job1"); err != nil {
