@@ -30,7 +30,7 @@ func (e *EtcdRegistry) Name() string {
 	return "etcd"
 }
 
-func (e *EtcdRegistry) Init(ctx context.Context, opts ...registry.Options) (err error) {
+func (e *EtcdRegistry) Init(ctx context.Context, opts ...registry.Option) (err error) {
 	e.options = &registry.Options{}
 	for _, opt := range opts {
 		opt(e.options)
@@ -51,7 +51,7 @@ func (e *EtcdRegistry) Register(ctx context.Context, service *registry.Service) 
 	select {
 	case e.serviceCh <- service:
 	default:
-		err = fmt.Errorf("register chan is full
+		err = fmt.Errorf("register chan is full")
 		return
 	}
 	return
