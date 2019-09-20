@@ -22,3 +22,15 @@ func WithAddress(adds []string) Option {
 		opts.Address = adds
 	}
 }
+
+func WithRegistryPath(path string) Option {
+	return func(opts *Options) {
+		opts.RegistryPath = path
+	}
+}
+
+func WithHearBeat(hearBeat int64) Option {
+	return func(opts *Options) {
+		opts.HeartBeat = hearBeat
+	}
+}

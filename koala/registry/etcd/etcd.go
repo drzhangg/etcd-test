@@ -7,6 +7,8 @@ import (
 	"github.com/drzhangg/etcd-test/koala/registry"
 	"go.etcd.io/etcd/clientv3"
 	"path"
+	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -20,7 +22,13 @@ type EtcdRegistry struct {
 	client    *clientv3.Client
 	serviceCh chan *registry.Service
 
+	value              atomic.Value
+	lock               sync.Mutex
 	registryServiceMap map[string]*RegisterService
+}
+
+type AllServiceInfo struct {
+	serviceMap map[string]*registry.Service
 }
 
 type RegisterService struct {
@@ -39,6 +47,10 @@ var (
 )
 
 func init() {
+	allServiceInfo := &AllServiceInfo{
+		serviceMap: make(map[string]*registry.Service, MaxServiceNum),
+	}
+	etcdRegistry.value.Store(allServiceInfo)
 	registry.RegisterPlugin(etcdRegistry)
 	go etcdRegistry.run()
 }
@@ -48,6 +60,7 @@ func (e *EtcdRegistry) Name() string {
 	return "etcd"
 }
 
+// 实现接口方法
 func (e *EtcdRegistry) Init(ctx context.Context, opts ...registry.Option) (err error) {
 	e.options = &registry.Options{}
 	for _, opt := range opts {
@@ -64,7 +77,7 @@ func (e *EtcdRegistry) Init(ctx context.Context, opts ...registry.Option) (err e
 	return
 }
 
-// Register 服务注册
+// Register 服务注册 实现接口方法
 func (e *EtcdRegistry) Register(ctx context.Context, service *registry.Service) (err error) {
 	select {
 	case e.serviceCh <- service:
@@ -75,8 +88,43 @@ func (e *EtcdRegistry) Register(ctx context.Context, service *registry.Service) 
 	return
 }
 
-// Unregister 反注册
+// Unregister  反注册 实现接口方法
 func (e *EtcdRegistry) Unregister(ctx context.Context, service *registry.Service) (err error) {
+	return
+}
+
+// GetService 实现接口方法
+func (e *EtcdRegistry) GetService(ctx context.Context, serviceName string) (service *registry.Service, err error) {
+	allService := e.value.Load().(*AllServiceInfo)
+	//一般情况下,都会从缓存中读取
+	service, ok := allService.serviceMap[serviceName]
+	if ok {
+		return
+	}
+
+	//如果缓存中没有这个sservice,则从etcd中读取
+	e.lock.Lock()
+
+	defer e.lock.Unlock()
+
+	//从etcd中读取指定服务名字的服务信息
+	key := e.servicePath(serviceName)
+	resp, err := e.client.Get(ctx, key, clientv3.WithPrefix())
+	if err != nil {
+		return
+	}
+
+	for index, kv := range resp.Kvs {
+		fmt.Printf("index:%v, key:%v, val:%v\n", index, kv.Key, kv.Value)
+	}
+	return
+}
+
+// getServiceFromCache 从缓存中读取数据
+func (e *EtcdRegistry) getServiceFromCache(ctx context.Context, name string) (service *registry.Service, ok bool) {
+	// 从缓存中加载数据
+	allServiceInfo := e.value.Load().(*AllServiceInfo)
+	service, ok = allServiceInfo.serviceMap[name]
 	return
 }
 
@@ -124,8 +172,6 @@ func (e *EtcdRegistry) keepAlive(registryService *RegisterService) {
 		fmt.Printf("services:%s node:%s ttl:%v\n", registryService.service.Name, registryService.service.Nodes[0].Ip, registryService.service.Nodes[0].Port)
 	}
 	return
-
-	return
 }
 
 // registerService 注册服务
@@ -152,6 +198,7 @@ func (e *EtcdRegistry) registerService(registryService *RegisterService) (err er
 
 		//获取节点路径
 		key := e.serviceNodePath(tmp)
+		fmt.Println("key:", key)
 
 		_, err = e.client.Put(context.TODO(), key, string(data), clientv3.WithLease(resp.ID))
 		if err != nil {
@@ -174,6 +221,6 @@ func (e *EtcdRegistry) serviceNodePath(service *registry.Service) string {
 	return path.Join(e.options.RegistryPath, nodeIP)
 }
 
-func (e *EtcdRegistry) servicePath(service *registry.Service) string {
-	return path.Join(e.options.RegistryPath, service.Name)
+func (e *EtcdRegistry) servicePath(name string) string {
+	return path.Join(e.options.RegistryPath, name)
 }
