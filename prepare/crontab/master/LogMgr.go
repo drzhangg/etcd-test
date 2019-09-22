@@ -2,6 +2,7 @@ package master
 
 import (
 	"context"
+	"github.com/drzhangg/go-crontab/common"
 	"github.com/mongodb/mongo-go-driver/mongo"
 	"github.com/mongodb/mongo-go-driver/mongo/clientopt"
 	"time"
@@ -32,4 +33,16 @@ func InitLogMgr() (err error) {
 		logCollection: client.Database("cron").Collection("log"),
 	}
 	return
+}
+
+//查看任务日志
+func (logMgr *LogMgr) ListLog(name string, skip int, limit int) (logArr []*common.JobLog, err error) {
+	var (
+		filter *common.JobLogFilter
+	)
+	logArr = make([]*common.JobLog, 0)
+
+	//过滤条件
+	filter = &common.JobLogFilter{JobName: name}
+
 }
