@@ -2,6 +2,7 @@ package etcd
 
 import (
 	"context"
+	"fmt"
 	"github.com/drzhangg/etcd-test/koala/registry"
 	"testing"
 	"time"
@@ -54,6 +55,13 @@ func TestRegister(t *testing.T) {
 		//	fmt.Printf("service:%s, node:%v\n", service.Name, node)
 		//}
 		//fmt.Println()
+
+		service, err := registryInst.GetService(context.TODO(), "common_service")
+		if err != nil {
+			t.Errorf("get service failed,err :%v", err)
+			return
+		}
+		fmt.Printf("service:%#v\n", service)
 		time.Sleep(time.Second * 5)
 	}
 }

@@ -93,33 +93,6 @@ func (e *EtcdRegistry) Unregister(ctx context.Context, service *registry.Service
 	return
 }
 
-// GetService 实现接口方法
-func (e *EtcdRegistry) GetService(ctx context.Context, serviceName string) (service *registry.Service, err error) {
-	allService := e.value.Load().(*AllServiceInfo)
-	//一般情况下,都会从缓存中读取
-	service, ok := allService.serviceMap[serviceName]
-	if ok {
-		return
-	}
-
-	//如果缓存中没有这个sservice,则从etcd中读取
-	e.lock.Lock()
-
-	defer e.lock.Unlock()
-
-	//从etcd中读取指定服务名字的服务信息
-	key := e.servicePath(serviceName)
-	resp, err := e.client.Get(ctx, key, clientv3.WithPrefix())
-	if err != nil {
-		return
-	}
-
-	for index, kv := range resp.Kvs {
-		fmt.Printf("index:%v, key:%v, val:%v\n", index, kv.Key, kv.Value)
-	}
-	return
-}
-
 // getServiceFromCache 从缓存中读取数据
 func (e *EtcdRegistry) getServiceFromCache(ctx context.Context, name string) (service *registry.Service, ok bool) {
 	// 从缓存中加载数据
@@ -223,4 +196,48 @@ func (e *EtcdRegistry) serviceNodePath(service *registry.Service) string {
 
 func (e *EtcdRegistry) servicePath(name string) string {
 	return path.Join(e.options.RegistryPath, name)
+}
+
+// GetService 实现接口方法
+func (e *EtcdRegistry) GetService(ctx context.Context, name string) (service *registry.Service, err error) {
+	//一般情况下,都会从缓存中读取
+	service, ok := e.getServiceFromCache(ctx, name)
+	if ok {
+		return
+	}
+
+	//如果缓存中没有这个sservice,则从etcd中读取
+	e.lock.Lock()
+	defer e.lock.Unlock()
+	//先检测，是否从etcd中加载成功了
+	service, ok = e.getServiceFromCache(ctx, name)
+	if ok {
+		return
+	}
+
+	//从etcd中读取指定服务名字的服务信息
+	key := e.servicePath(name)
+	resp, err := e.client.Get(ctx, key, clientv3.WithPrefix())
+	if err != nil {
+		return
+	}
+
+	service = &registry.Service{
+		Name: name,
+	}
+	for _, kv := range resp.Kvs {
+		value := kv.Value
+		var tmpService registry.Service
+		err = json.Unmarshal(value, &tmpService)
+		if err != nil {
+			return
+		}
+
+		for _, node := range tmpService.Nodes {
+			service.Nodes = append(service.Nodes, node)
+		}
+
+		//fmt.Printf("index:%v, key:%v, val:%v\n", index, string(kv.Key), string(kv.Value))
+	}
+	return
 }
