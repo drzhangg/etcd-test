@@ -103,7 +103,7 @@ func (e *EtcdRegistry) getServiceFromCache(ctx context.Context, name string) (se
 
 func (e *EtcdRegistry) run() {
 
-	//ticker := time.NewTicker(MaxSyncServiceInterval)
+	ticker := time.NewTicker(MaxSyncServiceInterval)
 	for {
 		select {
 		case service := <-e.serviceCh:
@@ -115,6 +115,8 @@ func (e *EtcdRegistry) run() {
 				service: service,
 			}
 			e.registryServiceMap[service.Name] = registryService
+		case <-ticker.C:
+			e.syncServiceFromEtcd()
 		default:
 			e.registerOrKeepAlive()
 			time.Sleep(time.Millisecond * 500)
@@ -236,8 +238,52 @@ func (e *EtcdRegistry) GetService(ctx context.Context, name string) (service *re
 		for _, node := range tmpService.Nodes {
 			service.Nodes = append(service.Nodes, node)
 		}
-
-		//fmt.Printf("index:%v, key:%v, val:%v\n", index, string(kv.Key), string(kv.Value))
 	}
+	allServiceInfoOld := e.value.Load().(*AllServiceInfo)
+	var allServiceInfoNew = &AllServiceInfo{
+		serviceMap: make(map[string]*registry.Service, MaxServiceNum),
+	}
+	for key, val := range allServiceInfoOld.serviceMap {
+		allServiceInfoNew.serviceMap[key] = val
+	}
+
+	allServiceInfoNew.serviceMap[name] = service
+	e.value.Store(allServiceInfoNew)
 	return
+}
+
+func (e *EtcdRegistry) syncServiceFromEtcd() {
+	var allServiceInfoNew = &AllServiceInfo{serviceMap: make(map[string]*registry.Service, MaxServiceNum)}
+
+	ctx := context.TODO()
+	allServiceInfo := e.value.Load().(*AllServiceInfo)
+
+	//对于缓存的每一个服务，都需要从etcd中进行更新
+	for _, service := range allServiceInfo.serviceMap {
+		key := e.servicePath(service.Name)
+		resp, err := e.client.Get(ctx, key, clientv3.WithPrefix())
+		if err != nil {
+			allServiceInfoNew.serviceMap[service.Name] = service
+			continue
+		}
+
+		serviceNew := &registry.Service{
+			Name: service.Name,
+		}
+
+		for _, kv := range resp.Kvs {
+			value := kv.Value
+			var tmpService registry.Service
+			err = json.Unmarshal(value, &tmpService)
+			if err != nil {
+				return
+			}
+
+			for _, node := range tmpService.Nodes {
+				serviceNew.Nodes = append(serviceNew.Nodes, node)
+			}
+		}
+		allServiceInfoNew.serviceMap[serviceNew.Name] = serviceNew
+	}
+	e.value.Store(allServiceInfoNew)
 }
