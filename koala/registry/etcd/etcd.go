@@ -107,11 +107,16 @@ func (e *EtcdRegistry) run() {
 	for {
 		select {
 		case service := <-e.serviceCh:
-			_, ok := e.registryServiceMap[service.Name]
+			registryService, ok := e.registryServiceMap[service.Name]
 			if ok {
+				for _, node := range service.Nodes {
+					registryService.service.Nodes = append(registryService.service.Nodes, node)
+
+				}
+				registryService.registered = false
 				break
 			}
-			registryService := &RegisterService{
+			registryService = &RegisterService{
 				service: service,
 			}
 			e.registryServiceMap[service.Name] = registryService

@@ -61,7 +61,11 @@ func TestRegister(t *testing.T) {
 			t.Errorf("get service failed,err :%v", err)
 			return
 		}
-		fmt.Printf("service:%#v\n", service)
+		for _, node := range service.Nodes {
+			fmt.Printf("service:%s, node:%#v\n", service.Name, node)
+		}
+		//fmt.Printf("service:%#v\n", service)
+		fmt.Println()
 		time.Sleep(time.Second * 5)
 	}
 }
