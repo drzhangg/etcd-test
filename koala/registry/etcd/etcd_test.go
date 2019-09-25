@@ -68,4 +68,5 @@ func TestRegister(t *testing.T) {
 		fmt.Println()
 		time.Sleep(time.Second * 5)
 	}
+
 }
