@@ -12,3 +12,6 @@ etcd用于服务注册和服务发现
 
 
 
+## 扩展
+使用mongodb存一些日志文件到etcd中
+etcd的val存放一个struct
