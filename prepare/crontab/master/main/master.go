@@ -2,6 +2,8 @@ package main
 
 import (
 	"flag"
+	"fmt"
+	"github.com/drzhangg/etcd-test/prepare/crontab/master"
 	"runtime"
 )
 
@@ -21,14 +23,35 @@ func initEnv() {
 }
 
 func main() {
-	var(
+	var (
 		err error
 	)
 
+	//初始化命令行参数
 	initArgs()
 
+	//初始化线程
 	initEnv()
 
+	//加载配置
+	if err = master.InitConfig(confFile); err != nil {
+		goto ERR
+	}
 
+	//初始化服务发现模块
+	master.InitWorkerMgr()
 
+	//日志管理器
+	master.InitLogMgr()
+
+	//任务管理器
+	master.InitJobMgr()
+
+	//启动api HTTP服务
+	master.InitApiServer()
+
+	//正常退出
+
+ERR:
+	fmt.Println(err)
 }
