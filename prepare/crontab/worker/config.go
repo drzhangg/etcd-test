@@ -30,9 +30,12 @@ func InitConfig(filename string) (err error) {
 		return
 	}
 
+	//json反序列化
 	if err = json.Unmarshal(content, &conf); err != nil {
 		return
 	}
+
+	//赋值给全局变量
 	G_config = &conf
 	return
 }

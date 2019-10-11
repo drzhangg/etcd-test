@@ -2,6 +2,8 @@ package main
 
 import (
 	"flag"
+	"fmt"
+	"github.com/drzhangg/etcd-test/prepare/crontab/worker"
 	"runtime"
 )
 
@@ -32,6 +34,9 @@ func main() {
 	initEnv()
 
 	//加载配置
+	if err = worker.InitConfig(confFile); err != nil {
+		goto ERR
+	}
 
 	//服务注册
 
@@ -44,4 +49,6 @@ func main() {
 	//初始化任务管理器
 
 	//正常退出
+ERR:
+	fmt.Println(err)
 }
