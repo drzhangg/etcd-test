@@ -18,6 +18,8 @@ var (
 func (scheduler *Scheduler) handleJobEvent(jobEvent *common.JobEvent) {
 	var (
 		jobSchedulePlan *common.JobSchedulePlan
+		//jobExecuting    bool
+		jobExisted      bool
 		err             error
 	)
 	switch jobEvent.EventType {
@@ -27,6 +29,9 @@ func (scheduler *Scheduler) handleJobEvent(jobEvent *common.JobEvent) {
 		}
 		scheduler.jobPlanTable[jobEvent.Job.Name] = jobSchedulePlan
 	case common.JOB_EVENT_DELETE:
+		if jobSchedulePlan, jobExisted = scheduler.jobPlanTable[jobEvent.Job.Name]; jobExisted {
+			delete(scheduler.jobPlanTable, jobEvent.Job.Name)
+		}
 	case common.JOB_EVENT_KILL:
 
 	}
