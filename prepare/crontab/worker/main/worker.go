@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/drzhangg/etcd-test/prepare/crontab/worker"
 	"runtime"
+	"time"
 )
 
 var (
@@ -55,6 +56,10 @@ func main() {
 	//初始化任务管理器
 
 	//正常退出
+	for {
+		time.Sleep(1 * time.Second)
+	}
+	return
 ERR:
 	fmt.Println(err)
 }
