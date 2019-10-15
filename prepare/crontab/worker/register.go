@@ -77,10 +77,14 @@ func (register *Register) keepOnline() {
 		goto RETRY
 	}
 
+	//这个如果不加上会报panic
+	cancelCtx, cancelFunc = context.WithCancel(context.TODO())
+
 	//put操作
 	if _, err = register.kv.Put(cancelCtx, regKey, "", clientv3.WithLease(leaseGrantResp.ID)); err != nil {
 		goto RETRY
 	}
+	fmt.Println("key----", regKey)
 
 	//通过for查看租约是否时效
 	for {
