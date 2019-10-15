@@ -14,7 +14,7 @@ var (
 
 // 解析命令行参数
 func initArgs() {
-	flag.StringVar(&confFile, "config", "./worker.json", "worker.json")
+	flag.StringVar(&confFile, "config", "/Users/drzhang/go/src/github.com/drzhangg/etcd-test/prepare/crontab/worker/main/worker.json", "worker.json")
 	flag.Parse()
 }
 
@@ -61,5 +61,5 @@ func main() {
 	}
 	return
 ERR:
-	fmt.Println(err)
+	fmt.Println("init err------",err)
 }

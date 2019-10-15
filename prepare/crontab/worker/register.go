@@ -2,6 +2,7 @@ package worker
 
 import (
 	"context"
+	"fmt"
 	"github.com/coreos/etcd/clientv3"
 	"github.com/drzhangg/etcd-test/prepare/crontab/common"
 	"net"
@@ -98,6 +99,7 @@ RETRY:
 	if cancelFunc != nil {
 		cancelFunc()
 	}
+	fmt.Println("keep online err-----", err)
 }
 
 func InitRegister() (err error) {
