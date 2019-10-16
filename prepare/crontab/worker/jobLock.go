@@ -19,6 +19,13 @@ type JobLock struct {
 }
 
 // 初始化一把锁
+func InitJobLock(jobName string, kv clientv3.KV, lease clientv3.Lease) (jobLock *JobLock) {
+	return &JobLock{
+		kv:      kv,
+		lease:   lease,
+		jobName: jobName,
+	}
+}
 
 // 尝试上锁
 func (jobLock *JobLock) TryLock() (err error) {
@@ -96,3 +103,9 @@ FAIL:
 }
 
 // 释放锁
+func (jobLock *JobLock) Unlock() {
+	if jobLock.isLocked {
+		jobLock.cancelFun()                                   //取消自动续租
+		jobLock.lease.Revoke(context.TODO(), jobLock.leaseId) //释放租约
+	}
+}
