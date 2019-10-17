@@ -30,7 +30,7 @@ func (executor *Executor) ExecuteJob(info *common.JobExecuteInfo) {
 		}
 
 		//初始化分布式锁
-		jobLock = worker.G_jobMgr.CreateJobLock(info.Job.Name)
+		//jobLock = G_jobMgr
 
 		//记录任务开始时间
 
