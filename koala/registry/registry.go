@@ -3,7 +3,7 @@ package registry
 import "context"
 
 type Registry interface {
-	//插件的名字
+	//插件的名字 eg:etcd or consul
 	Name() string
 
 	//初始化
