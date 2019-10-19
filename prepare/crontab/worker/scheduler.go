@@ -1,6 +1,9 @@
 package worker
 
-import "github.com/drzhangg/etcd-test/prepare/crontab/common"
+import (
+	"github.com/drzhangg/etcd-test/prepare/crontab/common"
+	"time"
+)
 
 // 任务调度
 type Scheduler struct {
@@ -19,8 +22,8 @@ func (scheduler *Scheduler) handleJobEvent(jobEvent *common.JobEvent) {
 	var (
 		jobSchedulePlan *common.JobSchedulePlan
 		//jobExecuting    bool
-		jobExisted      bool
-		err             error
+		jobExisted bool
+		err        error
 	)
 	switch jobEvent.EventType {
 	case common.JOB_EVENT_SAVE: //保存任务事件
@@ -43,13 +46,31 @@ func (scheduler *Scheduler) TryStartJob(jobPlan *common.JobSchedulePlan) {
 }
 
 // 重新计算任务调度任务
+func (scheduler *Scheduler) TryScheduler() (schedulerAfter time.Duration) {
+	return
+}
 
 // 处理任务结果
+func (scheduler *Scheduler) handleJobResult(result *common.JobExecuteResult) {
+
+}
 
 // 调度协程
+func (scheduler *Scheduler) scheduleLoop() {
+
+}
 
 //推送任务变化事件
+func (scheduler *Scheduler) PushJobEvent(jobEvent *common.JobEvent) {
+
+}
 
 //初始化调度器
+func InitScheduler() (err error) {
+	return
+}
 
 //回传任务执行结果
+func (scheduler *Scheduler) PushJobResult(jobResult *common.JobExecuteResult) {
+
+}

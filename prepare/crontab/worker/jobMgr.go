@@ -3,6 +3,7 @@ package worker
 import (
 	"context"
 	"github.com/coreos/etcd/clientv3"
+	"github.com/coreos/etcd/mvcc/mvccpb"
 	"github.com/drzhangg/etcd-test/prepare/crontab/common"
 )
 
@@ -21,7 +22,10 @@ var (
 //监听任务变化
 func (jobMgr *JobMgr) watchJobs() (err error) {
 	var (
-		getResp *clientv3.GetResponse
+		getResp  *clientv3.GetResponse
+		kvpair   *mvccpb.KeyValue
+		job      *common.Job
+		jobEvent *common.JobEvent
 	)
 	//1.get一下/zhang/cron/jobs/目录的后续变化
 	if getResp, err = jobMgr.kv.Get(context.TODO(), common.JOB_SAVE_DIR, clientv3.WithPrefix()); err != nil {
@@ -29,6 +33,16 @@ func (jobMgr *JobMgr) watchJobs() (err error) {
 	}
 
 	//查看当前都有哪些任务
+	for _, kvpair = range getResp.Kvs {
+		if job, err = common.UnpackJob(kvpair.Value); err != nil {
+			//判断执行哪种操作
+			jobEvent = common.BuildJobEvent(common.JOB_EVENT_SAVE, job)
+			//将调度操作同步给调度协程
+			G_scheduler.PushJobEvent(jobEvent)
+		}
+	}
+
+	//2.从该revision向后监听变化事件
 	go func() {
 		//从GET时刻的后续版本开始监听变化
 
@@ -36,8 +50,6 @@ func (jobMgr *JobMgr) watchJobs() (err error) {
 
 		//处理监听事件
 	}()
-
-	//2.从该revision向后监听变化事件
 
 	return
 }
