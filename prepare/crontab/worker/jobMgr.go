@@ -30,6 +30,7 @@ func (jobMgr *JobMgr) watchJobs() (err error) {
 		watchChan          clientv3.WatchChan
 		watchResp          clientv3.WatchResponse
 		watchEvent         mvccpb.Event
+		jobName            string
 	)
 	//1.get一下/zhang/cron/jobs/目录的后续变化
 	if getResp, err = jobMgr.kv.Get(context.TODO(), common.JOB_SAVE_DIR, clientv3.WithPrefix()); err != nil {
@@ -59,18 +60,59 @@ func (jobMgr *JobMgr) watchJobs() (err error) {
 			for _, watchEvent = range watchResp.Events {
 				switch watchEvent.Type {
 				case mvccpb.PUT:
+					//任务保存事件
+					if job, err = common.UnpackJob(watchEvent.Kv.Value); err != nil {
+						continue
+					}
+					// 构建一个更新Event
+					jobEvent = common.BuildJobEvent(common.JOB_EVENT_SAVE, job)
 				case mvccpb.DELETE:
+					// 删除任务
+					jobName = common.ExtractJobName(string(watchEvent.Kv.Key))
 
+					job = &common.Job{Name: jobName}
+
+					// 构建一个删除Event
+					jobEvent = common.BuildJobEvent(common.JOB_EVENT_DELETE, job)
 				}
+				// 变化推给Scheduler
+				G_scheduler.PushJobEvent(jobEvent)
 			}
 		}
 	}()
-
 	return
 }
 
 //监听强杀任务通知
 func (jobMgr *JobMgr) watchKiller() {
+	var (
+		watchChan     clientv3.WatchChan
+		watchChanResp clientv3.WatchResponse
+		watchEvent    mvccpb.Event
+		jobName       string
+		job           *common.Job
+		jobEvent      *common.JobEvent
+	)
+
+	go func() {
+		watchChan = jobMgr.watcher.Watch(context.TODO(), common.JOB_KILLER_DIR, clientv3.WithPrefix())
+		for watchChanResp = range watchChan {
+
+			for _, watchEvent = range watchChanResp.Events {
+				switch watchEvent.Type {
+				case mvccpb.PUT:	//杀死任务事件
+					jobName = common.ExtractKillerName(string(watchEvent.Kv.Key))
+					job = &common.Job{Name: jobName}
+					jobEvent = common.BuildJobEvent(common.JOB_EVENT_KILL, job)
+
+					G_scheduler.PushJobEvent(jobEvent)
+				case mvccpb.DELETE:
+
+				}
+			}
+		}
+
+	}()
 
 }
 

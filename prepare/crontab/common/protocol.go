@@ -94,12 +94,13 @@ func BuildResponse(errno int, msg string, data interface{}) (resp []byte, err er
 	return
 }
 
-//反序列化job
+//反序列化job  将传入的data数据反序列化给job
 func UnpackJob(value []byte) (ret *Job, err error) {
 	var (
 		job *Job
 	)
 	job = &Job{}
+	//反序列化的interface必须要传一个指针
 	if err = json.Unmarshal(value, job); err != nil {
 		return
 	}
