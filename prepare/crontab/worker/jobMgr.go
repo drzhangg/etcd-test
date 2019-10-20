@@ -22,10 +22,14 @@ var (
 //监听任务变化
 func (jobMgr *JobMgr) watchJobs() (err error) {
 	var (
-		getResp  *clientv3.GetResponse
-		kvpair   *mvccpb.KeyValue
-		job      *common.Job
-		jobEvent *common.JobEvent
+		getResp            *clientv3.GetResponse
+		kvpair             *mvccpb.KeyValue
+		job                *common.Job
+		jobEvent           *common.JobEvent
+		watchStartRevision int64
+		watchChan          clientv3.WatchChan
+		watchResp          clientv3.WatchResponse
+		watchEvent         mvccpb.Event
 	)
 	//1.get一下/zhang/cron/jobs/目录的后续变化
 	if getResp, err = jobMgr.kv.Get(context.TODO(), common.JOB_SAVE_DIR, clientv3.WithPrefix()); err != nil {
@@ -43,12 +47,23 @@ func (jobMgr *JobMgr) watchJobs() (err error) {
 	}
 
 	//2.从该revision向后监听变化事件
-	go func() {
-		//从GET时刻的后续版本开始监听变化
+	go func() { //监听协程
+		//从GET时刻的后续版本开始监听变化，要在当前版本+1
+		watchStartRevision = getResp.Header.Revision + 1
 
 		//监听/zhang/cron/jobs/目录的后续变化
+		watchChan = jobMgr.watcher.Watch(context.TODO(), common.JOB_SAVE_DIR, clientv3.WithRev(watchStartRevision), clientv3.WithPrefix())
 
 		//处理监听事件
+		for watchResp = range watchChan {
+			for _, watchEvent = range watchResp.Events {
+				switch watchEvent.Type {
+				case mvccpb.PUT:
+				case mvccpb.DELETE:
+
+				}
+			}
+		}
 	}()
 
 	return

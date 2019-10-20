@@ -62,7 +62,7 @@ func (scheduler *Scheduler) scheduleLoop() {
 
 //推送任务变化事件
 func (scheduler *Scheduler) PushJobEvent(jobEvent *common.JobEvent) {
-
+	scheduler.jobEventChan <- jobEvent
 }
 
 //初始化调度器
