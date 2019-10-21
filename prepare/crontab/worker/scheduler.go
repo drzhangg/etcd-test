@@ -180,5 +180,5 @@ func InitScheduler() (err error) {
 
 //回传任务执行结果
 func (scheduler *Scheduler) PushJobResult(jobResult *common.JobExecuteResult) {
-
+	scheduler.jobResultChan <- jobResult
 }
