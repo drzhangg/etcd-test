@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/urfave/cli"
 	"log"
 	"os"
@@ -36,10 +37,12 @@ func main() {
 	}
 
 	app.Action = func(c *cli.Context) error {
-		//name := "someone"
-		//if c.NArg() > 0 {
-		//	name = c.Args()[0]
-		//}
+		err := genMgr.Run(&opt)
+		if err != nil {
+			fmt.Sprintf("code generator failed, err:%v\n", err)
+			return err
+		}
+		fmt.Println("code generator succ")
 		return nil
 	}
 
