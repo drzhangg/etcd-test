@@ -12,6 +12,7 @@ func main() {
 	var opt Option
 
 	app := cli.NewApp()
+	//生成命令行模式
 	app.Flags = []cli.Flag{
 		cli.StringFlag{
 			Name:        "f",
