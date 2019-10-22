@@ -23,6 +23,7 @@ func main() {
 		cli.StringFlag{
 			Name:        "o",
 			Usage:       "output directory",
+			Value:       "./output/",
 			Destination: &opt.Output,
 		},
 		cli.BoolFlag{

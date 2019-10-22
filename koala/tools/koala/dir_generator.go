@@ -26,9 +26,7 @@ var AllDirList []string = []string{
 func (d *DirGenerator) Run(opt *Option) (err error) {
 
 	for _, dir := range AllDirList {
-		prefix := "output/"
-		fullDir := path.Join(opt.Output, prefix+dir)
-		fmt.Println("path----",fullDir)
+		fullDir := path.Join(opt.Output, dir)
 		if err = os.MkdirAll(fullDir, 0755); err != nil {
 			fmt.Sprintf("mkdir dir %s failed,err:%v\n", fullDir, err)
 			return
