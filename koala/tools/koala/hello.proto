@@ -1,11 +1,11 @@
 syntax = "proto3";
 
 service hello{
-    rpc SayHello(dataReq) returns (dataRsp) {}
+    rpc SayHello(DataReq) returns (DataRsp) {}
 }
-message dataReq{
+message DataReq{
 
 }
-message dataRsp{
+message DataRsp{
 
 }
