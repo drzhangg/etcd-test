@@ -3,8 +3,8 @@ package worker
 import (
 	"context"
 	"fmt"
-	"github.com/coreos/etcd/clientv3"
 	"github.com/drzhangg/etcd-test/prepare/crontab/common"
+	"go.etcd.io/etcd/clientv3"
 	"net"
 	"time"
 )

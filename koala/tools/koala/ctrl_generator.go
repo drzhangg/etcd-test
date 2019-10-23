@@ -53,11 +53,11 @@ func (d *CtrlGenerator) generateRpc(opt *Option) (err error) {
 	fmt.Fprintf(file, `"github.com/drzhangg/etcd-test/koala/tools/koala/output/generate"`)
 	fmt.Fprintln(file)
 	fmt.Fprintf(file, ")\n")
-	fmt.Fprintf(file, "type server struct{\n}\n")
+	fmt.Fprintf(file, "type Server struct{\n}\n")
 	fmt.Fprintf(file, "\n\n")
 
 	for _, rpc := range d.rpc {
-		fmt.Fprintf(file, "func (s *server) %s(ctx context.Context,r *hello.%s)(resp *hello.%s,err error){\nreturn}\n\n", rpc.Name, rpc.RequestType, rpc.ReturnsType)
+		fmt.Fprintf(file, "func (s *Server) %s(ctx context.Context,r *hello.%s)(resp *hello.%s,err error){\nreturn}\n\n", rpc.Name, rpc.RequestType, rpc.ReturnsType)
 	}
 	return
 }

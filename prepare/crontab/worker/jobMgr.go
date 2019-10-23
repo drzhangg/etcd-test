@@ -2,9 +2,9 @@ package worker
 
 import (
 	"context"
-	"github.com/coreos/etcd/clientv3"
-	"github.com/coreos/etcd/mvcc/mvccpb"
 	"github.com/drzhangg/etcd-test/prepare/crontab/common"
+	"go.etcd.io/etcd/clientv3"
+	"go.etcd.io/etcd/mvcc/mvccpb"
 	"time"
 )
 
@@ -30,7 +30,7 @@ func (jobMgr *JobMgr) watchJobs() (err error) {
 		watchStartRevision int64
 		watchChan          clientv3.WatchChan
 		watchResp          clientv3.WatchResponse
-		watchEvent         mvccpb.Event
+		watchEvent         *clientv3.Event
 		jobName            string
 	)
 	//1.get一下/zhang/cron/jobs/目录的后续变化
@@ -89,7 +89,7 @@ func (jobMgr *JobMgr) watchKiller() {
 	var (
 		watchChan     clientv3.WatchChan
 		watchChanResp clientv3.WatchResponse
-		watchEvent    mvccpb.Event
+		watchEvent    *clientv3.Event
 		jobName       string
 		job           *common.Job
 		jobEvent      *common.JobEvent
