@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/drzhangg/etcd-test/prepare/crontab/master"
 	"runtime"
+	"time"
 )
 
 var (
@@ -54,9 +55,16 @@ func main() {
 	}
 
 	//启动api HTTP服务
-	master.InitApiServer()
+	if err = master.InitApiServer(); err != nil {
+		goto ERR
+	}
 
 	//正常退出
+	for {
+		time.Sleep(1 * time.Second)
+	}
+
+	return
 
 ERR:
 	fmt.Println(err)
