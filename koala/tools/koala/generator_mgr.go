@@ -2,7 +2,9 @@ package main
 
 import "fmt"
 
-var genMgr *GeneratorMgr = &GeneratorMgr{genMap: map[string]Generator{}}
+var genMgr *GeneratorMgr = &GeneratorMgr{
+	genMap: map[string]Generator{},
+}
 
 type GeneratorMgr struct {
 	genMap map[string]Generator
