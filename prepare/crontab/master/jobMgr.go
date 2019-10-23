@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/coreos/etcd/clientv3"
+	"github.com/coreos/etcd/mvcc/mvccpb"
 	"github.com/drzhangg/etcd-test/prepare/crontab/common"
 	"time"
 )
@@ -78,6 +79,78 @@ func (jobMgr *JobMgr) SaveJob(job *common.Job) (oldJob *common.Job, err error) {
 			return
 		}
 		oldJob = &oldJobObj
+	}
+	return
+}
+
+// 删除任务
+func (jobMgr *JobMgr) DeleteJob(name string) (oldJob *common.Job, err error) {
+	var (
+		jobKey    string
+		delResp   *clientv3.DeleteResponse
+		oldJobObj common.Job
+	)
+	//etcd中保存任务的key
+	jobKey = common.JOB_SAVE_DIR + name
+
+	if delResp, err = jobMgr.kv.Delete(context.TODO(), jobKey, clientv3.WithPrevKV()); err != nil {
+		return
+	}
+
+	//返回被删除的任务信息
+	if delResp.PrevKvs != nil {
+		if err = json.Unmarshal(delResp.PrevKvs[0].Value, &oldJobObj); err != nil {
+			err = nil
+			return
+		}
+		oldJob = &oldJobObj
+	}
+	return
+}
+
+// 列举全部任务
+func (jobMgr *JobMgr) ListJobs() (jobList []*common.Job, err error) {
+	var (
+		jobKey  string
+		getResp *clientv3.GetResponse
+		kvPair  *mvccpb.KeyValue
+		job     *common.Job
+	)
+
+	jobKey = common.JOB_SAVE_DIR
+
+	//get withPrefix
+	if getResp, err = jobMgr.kv.Get(context.TODO(), jobKey, clientv3.WithPrefix()); err != nil {
+		return
+	}
+
+	jobList = make([]*common.Job, 0)
+	for _, kvPair = range getResp.Kvs {
+		if err = json.Unmarshal(kvPair.Value, &job); err != nil {
+			err = nil
+			return
+		}
+		jobList = append(jobList, job)
+	}
+	return
+}
+
+//杀死任务
+func (jobMgr *JobMgr) KillJob(name string) (err error) {
+	var (
+		killKey        string
+		leaseGrantResp *clientv3.LeaseGrantResponse
+	)
+	killKey = common.JOB_KILLER_DIR + name
+
+	//让租约自动过期
+	if leaseGrantResp, err = jobMgr.lease.Grant(context.TODO(), 1); err != nil {
+		return
+	}
+
+	//标记任务为kill状态
+	if _, err = jobMgr.kv.Put(context.TODO(), killKey, "", clientv3.WithLease(leaseGrantResp.ID)); err != nil {
+		return
 	}
 	return
 }
