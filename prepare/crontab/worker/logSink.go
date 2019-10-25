@@ -25,17 +25,6 @@ func (logSink *LogSink) saveLogs(batch *common.LogBatch) {
 	return
 }
 
-// 发送日志
-func (logSink *LogSink) Append(jobLog *common.JobLog) {
-	select {
-	//把jobLog传入通道
-	case logSink.logChan <- jobLog:
-	default:
-		//队列满了就丢弃
-	}
-	return
-}
-
 // 日志存储协程
 func (logSink *LogSink) writeLoop() {
 	var (
@@ -103,5 +92,16 @@ func InitLogSink() (err error) {
 	//启动一个协程，来处理日志
 	go G_logSink.writeLoop()
 
+	return
+}
+
+// 发送日志
+func (logSink *LogSink) Append(jobLog *common.JobLog) {
+	select {
+	//把jobLog传入通道
+	case logSink.logChan <- jobLog:
+	default:
+		//队列满了就丢弃
+	}
 	return
 }
