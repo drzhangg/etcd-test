@@ -10,9 +10,9 @@ type GeneratorMgr struct {
 	genMap map[string]Generator
 }
 
-func (gen *GeneratorMgr) Run(opt *Option) (err error) {
+func (gen *GeneratorMgr) Run(opt *Option,metaData *ServiceMetaData) (err error) {
 	for _, gen := range gen.genMap {
-		if err = gen.Run(opt); err != nil {
+		if err = gen.Run(opt,metaData); err != nil {
 			return
 		}
 	}

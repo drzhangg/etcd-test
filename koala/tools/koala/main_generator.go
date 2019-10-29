@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"html/template"
 	"os"
 	"path"
 )
@@ -9,7 +10,7 @@ import (
 type MainGenerator struct {
 }
 
-func (d *MainGenerator) Run(opt *Option) (err error) {
+func (d *MainGenerator) Run(opt *Option,metaData *ServiceMetaData) (err error) {
 	filename := path.Join("./", opt.Output, "main/main.go")
 	file, err := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0755)
 	if err != nil {
@@ -18,42 +19,21 @@ func (d *MainGenerator) Run(opt *Option) (err error) {
 	}
 	defer file.Close()
 
-	fmt.Fprintf(file, "package main\n")
-	fmt.Fprintf(file, "import(\n")
-	fmt.Fprintf(file, `"net"`)
-	fmt.Fprintln(file)
+	err = d.render(file, main_template)
+	if err != nil {
+		return
+	}
 
-	fmt.Fprintf(file, `"log"`)
-	fmt.Fprintln(file)
+	return
+}
 
-	fmt.Fprintf(file, `"google.golang.org/grpc"`)
-	fmt.Fprintln(file)
-
-	fmt.Fprintf(file, `"github.com/drzhangg/etcd-test/koala/tools/koala/output/controller"`)
-	fmt.Fprintln(file)
-
-	fmt.Fprintf(file, `pb "github.com/drzhangg/etcd-test/koala/tools/koala/output/generate"`)
-	fmt.Fprintln(file)
-
-	fmt.Fprintf(file, ")\n")
-
-	fmt.Fprintf(file, "var server = &controller.Server{}\n")
-	fmt.Fprint(file, "\n\n")
-
-	fmt.Fprintf(file, `var port = "12345"`)
-	fmt.Fprint(file, "\n\n")
-
-	fmt.Fprintf(file, `
-		func main() {
-			lis,err := net.Listen("tcp",port)
-			if err != nil {
-				log.Fatal("failed to listen:%v",err)
-			}
-			s := grpc.NewServer()
-			pb.RegisterHelloServer(s,server)
-			s.Serve(lis)
-		}
-	`)
+func (d *MainGenerator) render(file *os.File, data string) (err error) {
+	t := template.New("main")
+	t, err = t.Parse(data)
+	if err != nil {
+		return
+	}
+	err = t.Execute(file, nil)
 	return
 }
 

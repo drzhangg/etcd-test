@@ -39,7 +39,8 @@ func main() {
 	}
 
 	app.Action = func(c *cli.Context) error {
-		err := genMgr.Run(&opt)
+		var metaData *ServiceMetaData
+		err := genMgr.Run(&opt, metaData)
 		if err != nil {
 			fmt.Sprintf("code generator failed, err:%v\n", err)
 			return err

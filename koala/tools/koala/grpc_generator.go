@@ -9,7 +9,7 @@ import (
 type GrpcGenerator struct {
 }
 
-func (d *GrpcGenerator) Run(opt *Option) (err error) {
+func (d *GrpcGenerator) Run(opt *Option,metaData *ServiceMetaData) (err error) {
 	// protoc --go_out=plugins=grpc:. hello.proto
 	outputName := fmt.Sprintf("plugins=grpc:%s/generate/", opt.Output)
 	cmd := exec.Command("protoc", "--go_out", outputName, opt.Proto3Filename)
