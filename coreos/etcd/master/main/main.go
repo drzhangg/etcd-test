@@ -1,32 +1,27 @@
 package main
 
 import (
-	"context"
+	"flag"
 	"fmt"
-	"go.etcd.io/etcd/clientv3"
-	"log"
-	"time"
+	"github.com/drzhangg/etcd-test/coreos/etcd/master/common"
 )
 
+var (
+	confFile string
+)
+
+// 解析命令行参数
+func initArgs() {
+	flag.StringVar(&confFile, "config", "./master.yaml", "指定master.yaml")
+	flag.Parse()
+}
+
 func main() {
-	config := clientv3.Config{
-		Endpoints:   []string{"47.103.9.218:2379"},
-		DialTimeout: time.Duration(time.Second * 5),
-	}
 
-	client, err := clientv3.New(config)
-	if err != nil {
-		log.Fatal(err)
-	}
+	initArgs()
 
-	kv := clientv3.NewKV(client)
-	getResp, err := kv.Get(context.TODO(), "/test/key1")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	for _, v := range getResp.Kvs {
-		fmt.Println(string(v.Key), string(v.Value))
+	if err := common.InitConfig(confFile); err != nil {
+		fmt.Println(err)
 	}
 
 }
