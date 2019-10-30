@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/drzhangg/etcd-test/coreos/etcd/master/common"
+	"github.com/drzhangg/etcd-test/coreos/etcd/master"
 )
 
 var (
@@ -20,7 +20,7 @@ func main() {
 
 	initArgs()
 
-	if err := common.InitConfig(confFile); err != nil {
+	if err := master.InitConfig(confFile); err != nil {
 		fmt.Println(err)
 	}
 

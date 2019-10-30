@@ -1,4 +1,4 @@
-package common
+package master
 
 import (
 	"fmt"
@@ -7,8 +7,8 @@ import (
 	"log"
 )
 
-type Config struct {
-	Etcd `yaml:"etcd,inline"`
+type EtcdConf struct {
+	Etcd Etcd `yaml:"etcd"`
 }
 
 type Etcd struct {
@@ -17,12 +17,15 @@ type Etcd struct {
 }
 
 func InitConfig(fileName string) (err error) {
-	var etcdConf Etcd
+	var etcdConf EtcdConf
 	bytes, err := ioutil.ReadFile(fileName)
 	if err != nil {
 		log.Fatal(err)
 	}
-	yaml.Unmarshal(bytes, &etcdConf)
+	err = yaml.Unmarshal(bytes, &etcdConf)
+	if err != nil {
+		log.Fatal(err)
+	}
 	fmt.Println(etcdConf)
 	return
 }
