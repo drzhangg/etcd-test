@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/drzhangg/etcd-test/coreos/etcd/master"
+	"github.com/drzhangg/etcd-test/coreos/etcd/master/common"
 )
 
 var (
@@ -20,8 +20,12 @@ func main() {
 
 	initArgs()
 
-	if err := master.InitConfig(confFile); err != nil {
+	//初始化配置文件
+	if err := common.InitConfig(confFile); err != nil {
 		fmt.Println(err)
 	}
+
+	//初始化etcd
+
 
 }
