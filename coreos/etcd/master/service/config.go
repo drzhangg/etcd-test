@@ -1,4 +1,4 @@
-package common
+package service
 
 import (
 	"fmt"
@@ -13,12 +13,12 @@ type Config struct {
 
 type Etcd struct {
 	Endpoints   []string `yaml:"endpoints"`
-	DialTimeout int      `yaml:"dialTimeout"`
+	DialTimeout int64      `yaml:"dialTimeout"`
 }
 
 type MongoDB struct {
 	Url            string `yaml:"url"`
-	ConnectTimeout int    `yaml:"connectTimeout"`
+	ConnectTimeout int64    `yaml:"connectTimeout"`
 }
 
 var (
