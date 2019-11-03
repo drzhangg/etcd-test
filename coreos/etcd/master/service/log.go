@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"github.com/drzhangg/etcd-test/coreos/etcd/common"
 	"github.com/mongodb/mongo-go-driver/mongo"
 	"github.com/mongodb/mongo-go-driver/mongo/clientopt"
 	"time"
@@ -34,8 +35,18 @@ func InitLog() (err error) {
 
 // 获取日志列表
 // name 过滤条件
-// skip
+// skip	跳过指定数量的数据
+// limit	读取指定数量的数据
 func (log *Log) LogList(name string, skip int, limit int) (logArr []Log, err error) {
-	var ()
+	var (
+		jobFilter *common.JobFilter
+	)
+	//初始化数组
+	logArr = make([]Log, 0)
+	//查找过滤条件
+	jobFilter = &common.JobFilter{JobName: name}
+
+
+
 	return
 }
