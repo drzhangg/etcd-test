@@ -34,9 +34,14 @@ func main() {
 	}
 
 	//初始化日志文件
-
+	if err = service.InitLog(); err != nil {
+		goto ERR
+	}
 
 	//初始化任务管理器，对etcd进行操作
+	if err = service.InitManager(); err != nil {
+		goto ERR
+	}
 ERR:
 	fmt.Println(err)
 }
