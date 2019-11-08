@@ -2,6 +2,13 @@ package common
 
 import "strings"
 
+//定时任务信息
+type Job struct {
+	Name     string `json:"name"`     //任务名
+	Command  string `json:"command"`  //shell命令
+	CronExpr string `json:"cronExpr"` //cron表达式
+}
+
 //任务执行日志
 type JobLog struct {
 	JobName      string `json:"jobName" bson:"jobName"`           //任务执行名称

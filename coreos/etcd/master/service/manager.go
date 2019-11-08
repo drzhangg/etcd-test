@@ -1,6 +1,9 @@
 package service
 
 import (
+	"context"
+	"encoding/json"
+	"github.com/drzhangg/etcd-test/coreos/etcd/common"
 	"go.etcd.io/etcd/clientv3"
 	"time"
 )
@@ -41,3 +44,29 @@ func InitManager() (err error) {
 
 	return
 }
+
+//保存任务，把旧的任务信息返回
+func (manager *Manager) SaveManager(job *common.Job) (oldJob *common.Job, err error) {
+	var (
+		jobKey  string
+		datas   []byte
+		putResp *clientv3.PutResponse
+	)
+	//etcd保存任务的key
+	jobKey = common.JOB_SAVE_DIR + job.Name
+	//序列化job数据
+	if datas, err = json.Marshal(&job); err != nil {
+		return
+	}
+
+	if putResp, err = manager.kv.Put(context.TODO(), jobKey, string(datas), clientv3.WithPrevKV()); err != nil {
+		return
+	}
+
+}
+
+//全部任务
+
+//删除任务
+
+//杀死任务
