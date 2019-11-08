@@ -48,9 +48,10 @@ func InitManager() (err error) {
 //保存任务，把旧的任务信息返回
 func (manager *Manager) SaveManager(job *common.Job) (oldJob *common.Job, err error) {
 	var (
-		jobKey  string
-		datas   []byte
-		putResp *clientv3.PutResponse
+		jobKey    string
+		datas     []byte
+		putResp   *clientv3.PutResponse
+		objectJob common.Job
 	)
 	//etcd保存任务的key
 	jobKey = common.JOB_SAVE_DIR + job.Name
@@ -63,6 +64,13 @@ func (manager *Manager) SaveManager(job *common.Job) (oldJob *common.Job, err er
 		return
 	}
 
+	if putResp != nil {
+		if err = json.Unmarshal(putResp.PrevKv.Value, &objectJob); err != nil {
+			return
+		}
+		oldJob = &objectJob
+	}
+	return
 }
 
 //全部任务
