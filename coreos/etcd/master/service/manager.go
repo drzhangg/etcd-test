@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"github.com/coreos/etcd/mvcc/mvccpb"
 	"github.com/drzhangg/etcd-test/coreos/etcd/common"
 	"go.etcd.io/etcd/clientv3"
 	"time"
@@ -74,7 +75,70 @@ func (manager *Manager) SaveManager(job *common.Job) (oldJob *common.Job, err er
 }
 
 //全部任务
+func (manager *Manager) ListJobs() (jobList []*common.Job, err error) {
+	var (
+		jobKey      string
+		getResponse *clientv3.GetResponse
+		keyVal      *mvccpb.KeyValue
+		job         *common.Job
+	)
+	jobKey = common.JOB_SAVE_DIR
+
+	if getResponse, err = manager.kv.Get(context.TODO(), jobKey, clientv3.WithPrefix()); err != nil {
+		return
+	}
+
+	jobList = make([]*common.Job, 0)
+	for _, keyVal = range getResponse.Kvs {
+
+		if err = json.Unmarshal(keyVal.Value, &job); err != nil {
+			return
+		}
+		jobList = append(jobList, job)
+	}
+	return
+}
 
 //删除任务
+func (manager *Manager) DelJob(name string) (oldJob *common.Job, err error) {
+	var (
+		jobKey       string
+		delResp      *clientv3.DeleteResponse
+		oldJobObject common.Job
+	)
 
-//杀死任务
+	jobKey = common.JOB_SAVE_DIR
+	if delResp, err = manager.kv.Delete(context.TODO(), jobKey, clientv3.WithPrevKV()); err != nil {
+		return
+	}
+
+	//返回被删除的数据
+	if delResp.PrevKvs != nil {
+		if err = json.Unmarshal(delResp.PrevKvs[0].Value, &oldJobObject); err != nil {
+			return
+		}
+	}
+	oldJob = &oldJobObject
+	return
+}
+
+//杀死任务 kill
+func (manager *Manager) KillJob(name string) (err error) {
+	var (
+		jobKey         string
+		leaseGrantResp *clientv3.LeaseGrantResponse
+	)
+
+	jobKey = common.JOB_KILLER_DIR + name
+
+	//让租约自动过期
+	if leaseGrantResp, err = manager.lease.Grant(context.TODO(), 1); err != nil {
+		return
+	}
+
+	//标记任务为kill状态
+	if _, err = manager.kv.Put(context.TODO(), jobKey, "", clientv3.WithLease(leaseGrantResp.ID)); err != nil {
+		return
+	}
+	return
+}
