@@ -13,13 +13,14 @@ func main() {
 		err    error
 	)
 	config = clientv3.Config{
-		Endpoints:   []string{"47.99.240.52:2379"},
+		Endpoints:   []string{"47.99.240.51:29"},
 		DialTimeout: 5 * time.Second,
 	}
 
 	if client, err = clientv3.New(config); err != nil {
 		fmt.Println(err)
-		return
+		panic(err)
 	}
+	fmt.Println("连接成功")
 	client = client
 }
